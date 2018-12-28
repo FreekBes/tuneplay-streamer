@@ -1,0 +1,8 @@
+version: 1.0.0
+files:
+  - url: tuneplay-streamer-setup-1.0.0.exe
+    sha512: uYBXVYwQWjkwJ5fSQPTrodeuZWSc2ucF7i/Ovn6ig+qpjM+qB9bXL4NdJqnm69m4AbFM/j+ORqlP9Azi4JhJSQ==
+    size: 57541404
+path: tuneplay-streamer-setup-1.0.0.exe
+sha512: uYBXVYwQWjkwJ5fSQPTrodeuZWSc2ucF7i/Ovn6ig+qpjM+qB9bXL4NdJqnm69m4AbFM/j+ORqlP9Azi4JhJSQ==
+releaseDate: '2018-12-28T18:28:38.840Z'
