@@ -7,6 +7,7 @@ const prettySize = require('prettysize');
 const fs = require('fs');
 
 let mainWindow;
+let liqSoapRunning = false;
 let streamMP = null;
 let streamPW = null;
 
@@ -204,58 +205,109 @@ function start() {
         let url = mainWindow.webContents.getURL();
         if (url.indexOf("portal.php") > -1 && (url.indexOf("&a=") > -1 || url.indexOf("?a=") > -1)) {
             // navigated to the artist portal of a specified artist. Retrieve livestreaming data and show the main UI.
-            mainWindow.webContents.executeJavaScript('document.getElementById("mount_pw").value', false)
+            mainWindow.webContents.executeJavaScript('if (document.getElementById("mount_pw") != null) { document.getElementById("mount_pw").value } else { false; }', false)
                 .then(function(result) {
-                    streamMP = getParameterByName('a', url);
-                    if (streamMP != null) {
-                        streamMP = streamMP.toLowerCase();
+                    console.log("Auth data promise is fulfilled");
+                    if (result != false && result != "false") {
+                        streamMP = getParameterByName('a', url);
+                        if (streamMP != null) {
+                            streamMP = streamMP.toLowerCase();
+                        }
+                        streamPW = result;
+                        console.log(streamMP);
+                        console.log(streamPW);
+
+                        let liqScript = `
+                            #!/usr/bin/liquidsoap
+
+                            # Live DJ stuff
+                            set("harbor.bind_addr","0.0.0.0")
+                            set("harbor.verbose",true)
+                            livedj = input.harbor(
+                                "mount",
+                                port=4001,
+                                password="hackme"
+                            )
+                            
+                            # Set Radio
+                            radio = fallback(track_sensitive = false, [livedj])
+                            
+                            # Stream it out
+                            output.icecast(
+                                    %mp3(bitrate=256),
+                                    fallible=true,
+                                    host = "tuneplay.net",
+                                    port = 4003,
+                                    password = "`+streamPW+`",
+                                    mount = "`+streamMP+`",
+                                    radio
+                            )
+                        `;
+
+                        fs.writeFile('liq\\script.liq', liqScript, function(error) {
+                            if (error) {
+                                console.error(error);
+                                dialog.showErrorBox('An error occured', 'Could not write authentication details to disk. Details: ' + error.message);
+                                app.quit();
+                            }
+                            else {
+                                console.log("Liquidsoap script written to disk");
+                                mainWindow.loadFile('ui.html');
+                            }
+                        });
                     }
-                    streamPW = result;
-                    console.log(streamMP);
-                    console.log(streamPW);
-
-                    let liqScript = `
-                        #!/usr/bin/liquidsoap
-
-                        # Live DJ stuff
-                        set("harbor.bind_addr","0.0.0.0")
-                        set("harbor.verbose",true)
-                        livedj = input.harbor(
-                            "mount",
-                            port=4001,
-                            password="hackme"
-                        )
-                        
-                        # Set Radio
-                        radio = fallback(track_sensitive = false, [livedj])
-                        
-                        # Stream it out
-                        output.icecast(
-                                %mp3(bitrate=256),
-                                fallible=true,
-                                host = "tuneplay.net",
-                                port = 4003,
-                                password = `+streamPW+`,
-                                mount = `+streamMP+`,
-                                radio
-                        )
-                    `;
-
-                    fs.writeFile('liq\\script.liq', liqScript, function(error) {
-                        if (error) {
-                            console.error(error);
-                            dialog.showErrorBox('An error occured', 'Could not write authentication details to disk. Details: ' + error.message);
-                            app.quit();
-                        }
-                        else {
-                            console.log("LiquidSoap script written to disk");s
-                        }
-                    });
+                    else {
+                        dialog.showMessageBox(mainWindow, {
+                            type: "warning",
+                            title: "Livestreaming is not yet enabled for this artist",
+                            message: "Livestreaming is not yet enabled for the selected artist. You can enable it on this page, or you can press the back arrow up top to go back to the artist selection."
+                        });
+                    }
                 })
                 .catch(function(error) {
                     console.error(error);
+                    dialog.showErrorBox('An error occured', 'Could not retrieve authentication details.');
+                    app.quit();
                 });
         }
+        else {
+            console.log("Loaded page is not an artist portal main page");
+        }
+    });
+
+    mainWindow.on('closed', function(event) {
+        if (liqSoapRunning) {
+            console.log("Stopping liquidsoap...");
+            nodeCmd.get('taskkill /IM "liquidsoap.exe" /F', function(err, data, stderr) {
+                if (err) {
+                    console.log("Could not stop liquidsoap!");
+                    console.error(err);
+                }
+                else {
+                    console.log("Liquidsoap has been stopped.");
+                }
+            });
+        }
+        else {
+            console.log("Liquidsoap is not running, no need to stop it.");
+        }
+        fs.exists('liq\\script.liq', function(exists) {
+            if (exists) {
+                fs.unlink('liq\\script.liq', function(error) {
+                    if (error) {
+                        console.error(error);
+                    }
+                    else {
+                        console.log("script.liq deleted.");
+                    }
+                });
+            }
+            else {
+                console.log("No script.liq to delete.");
+            }
+        });
+        console.log("Quitting TunePlay Streamer...");
+        app.quit();
     });
 }
 
@@ -268,20 +320,5 @@ nodeCmd.get('liq\\liquidsoap.exe liq\\script.liq', function(err, data, stderr) {
     else {
         console.log(data);
     }
-});
-
-mainWindow.on('closed', function(event) {
-    console.log("Stopping liquidsoap...");
-    nodeCmd.get('taskkill /IM "liquidsoap.exe" /F', function(err, data, stderr) {
-        if (err) {
-            console.log("Could not stop liquidsoap!");
-            console.error(err);
-        }
-        else {
-            console.log("Liquidsoap has been stopped.");
-        }
-    });
-    console.log("Quitting...");
-    app.quit();
 });
 */
