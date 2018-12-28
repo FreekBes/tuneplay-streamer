@@ -3,8 +3,21 @@
     <head>
         <meta charset="UTF-8" />
         <title>TunePlay Streamer</title>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
+        <link rel="stylesheet" href="styles.css" />
+        <link rel="shortcut icon" href="build/favicon.ico" type="image/x-icon" />
+        <link rel="icon" type="image/ico" href="build/favicon.ico" />
+        <meta name="theme-color" content="#FFCB2E" />
+        <script src="webcast.js"></script>
+        <script src="libsamplerate.js"></script>
+        <script src="libshine.js"></script>
     </head>
     <body>
-        <h1>TunePlay Streamer Test</h1>
+        <div id="welcome"></div>
+        <div id="control">
+            <button id="start-stop-streaming" class="start" onclick="startService();">Start Livestreaming</button>
+        </div>
+        <script src="streamer.js"></script>
     </body>
 </html>

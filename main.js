@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require('electron');
+const { app, BrowserWindow, dialog, shell, remote, ipcMain } = require('electron');
 const nodeCmd = require('node-cmd');
 const ProgressBar = require('electron-progressbar');
 const fetchJson = require('fetch-json');
@@ -10,6 +10,7 @@ let mainWindow;
 let liqSoapRunning = false;
 let streamMP = null;
 let streamPW = null;
+global.artistData = null;
 
 // from https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 function getParameterByName(name, url) {
@@ -252,7 +253,27 @@ function start() {
                             }
                             else {
                                 console.log("Liquidsoap script written to disk");
-                                mainWindow.loadFile('ui.html');
+                                console.log("Retrieving artist data...");
+                                mainWindow.loadURL("https://www.tuneplay.net/loading.php");
+                                fetchJson.get("https://www.tuneplay.net/get.php?type=artist&id="+streamMP).then(function(json) {
+                                    if (Object.keys(json).length > 0) {
+                                        if (json["type"] == "success") {
+                                            console.log("Artist data retrieved");
+                                            global.artistData = json["data"];
+                                            mainWindow.loadFile('ui.html');
+                                        }
+                                        else {
+                                            console.log(json);
+                                            dialog.showErrorBox('An error occured', 'Could not retrieve artist info');
+                                            app.quit();
+                                        }
+                                    }
+                                    else {
+                                        console.error("Could not retrieve artist info. JSON is empty");
+                                        dialog.showErrorBox('An error occured', 'Could not retrieve artist info');
+                                        app.quit();
+                                    }
+                                });
                             }
                         });
                     }
@@ -311,14 +332,36 @@ function start() {
     });
 }
 
-/*
-console.log("Starting liquidsoap...");
-nodeCmd.get('liq\\liquidsoap.exe liq\\script.liq', function(err, data, stderr) {
-    if (err) {
-        console.error(err);
+function startLiqSoap(afterWards) {
+    if (!liqSoapRunning) {
+        console.log("Starting liquidsoap...");
+        nodeCmd.get('liq\\liquidsoap.exe liq\\script.liq', function(err, data, stderr) {
+            console.log("nodeCmd callback fired");
+            if (err) {
+                console.error(err);
+                dialog.showErrorBox('An error occured', 'Could not start Liquidsoap. Liquidsoap is required for connecting to the TunePlay Livestreaming servers.');
+                app.quit();
+            }
+        });
+        liqSoapRunning = true;
+        if (typeof afterWards == "function") {
+            afterWards();
+        }
+        else {
+            console.log("No afterwards function was given");
+        }
     }
     else {
-        console.log(data);
+        console.log("Liquidsoap is already running!");
+        if (typeof afterWards == "function") {
+            afterWards();
+        }
     }
+}
+
+ipcMain.on('start-liqsoap', function(event, arg) {
+    startLiqSoap(function() {
+        console.log("Liqsoap started event firing");
+        event.sender.send('liquidsoap-started');
+    });
 });
-*/
