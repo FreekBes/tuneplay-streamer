@@ -7,6 +7,19 @@ const prettySize = require('prettysize');
 const fs = require('fs');
 
 let mainWindow;
+let streamMP = null;
+let streamPW = null;
+
+// from https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
 
 app.on('ready', function() {
     console.log('App is ready!');
@@ -184,6 +197,64 @@ function start() {
         }
         else {
             mainWindow.title = "Sign in to TunePlay";
+        }
+    });
+
+    mainWindow.webContents.on('dom-ready', function(event) {
+        let url = mainWindow.webContents.getURL();
+        if (url.indexOf("portal.php") > -1 && (url.indexOf("&a=") > -1 || url.indexOf("?a=") > -1)) {
+            // navigated to the artist portal of a specified artist. Retrieve livestreaming data and show the main UI.
+            mainWindow.webContents.executeJavaScript('document.getElementById("mount_pw").value', false)
+                .then(function(result) {
+                    streamMP = getParameterByName('a', url);
+                    if (streamMP != null) {
+                        streamMP = streamMP.toLowerCase();
+                    }
+                    streamPW = result;
+                    console.log(streamMP);
+                    console.log(streamPW);
+
+                    let liqScript = `
+                        #!/usr/bin/liquidsoap
+
+                        # Live DJ stuff
+                        set("harbor.bind_addr","0.0.0.0")
+                        set("harbor.verbose",true)
+                        livedj = input.harbor(
+                            "mount",
+                            port=4001,
+                            password="hackme"
+                        )
+                        
+                        # Set Radio
+                        radio = fallback(track_sensitive = false, [livedj])
+                        
+                        # Stream it out
+                        output.icecast(
+                                %mp3(bitrate=256),
+                                fallible=true,
+                                host = "tuneplay.net",
+                                port = 4003,
+                                password = `+streamPW+`,
+                                mount = `+streamMP+`,
+                                radio
+                        )
+                    `;
+
+                    fs.writeFile('liq\\script.liq', liqScript, function(error) {
+                        if (error) {
+                            console.error(error);
+                            dialog.showErrorBox('An error occured', 'Could not write authentication details to disk. Details: ' + error.message);
+                            app.quit();
+                        }
+                        else {
+                            console.log("LiquidSoap script written to disk");s
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    console.error(error);
+                });
         }
     });
 }
