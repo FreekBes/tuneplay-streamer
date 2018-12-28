@@ -2,9 +2,19 @@
   "name": "tuneplay-streamer",
   "version": "1.0.0",
   "description": "Tool for Artists to livestream sets and mixes directly to TunePlay",
+  "homepage": "https://www.tuneplay.net/",
   "main": "main.js",
+  "build": {
+    "appId": "net.tuneplay.streamer",
+    "productName": "TunePlay Streamer",
+    "extraFiles": [
+      "liq"
+    ]
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "build --win",
+    "ship": "build --win -p always"
   },
   "repository": {
     "type": "git",
@@ -21,6 +31,14 @@
   },
   "homepage": "https://github.com/FreekBes/tuneplay-streamer#readme",
   "devDependencies": {
-    "electron": "^4.0.0"
+    "electron": "^4.0.0",
+    "electron-builder": "^20.38.4"
+  },
+  "dependencies": {
+    "node-cmd": "^3.0.0"
+  },
+  "engines": {
+    "node": "10.15.0",
+    "npm": "6.4.1"
   }
 }
