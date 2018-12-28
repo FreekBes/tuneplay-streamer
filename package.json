@@ -1,0 +1,23 @@
+{
+  "name": "tuneplay-streamer",
+  "version": "1.0.0",
+  "description": "Tool for Artists to livestream sets and mixes directly to TunePlay",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FreekBes/tuneplay-streamer.git"
+  },
+  "keywords": [
+    "tuneplay",
+    "livestreaming"
+  ],
+  "author": "Freek Bes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FreekBes/tuneplay-streamer/issues"
+  },
+  "homepage": "https://github.com/FreekBes/tuneplay-streamer#readme"
+}
