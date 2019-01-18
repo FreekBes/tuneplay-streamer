@@ -21,10 +21,11 @@ function startService() {
                 if (tempSource.name === 'TunePlay Streamer') {
                     console.log('%cFound TunePlay Streamer', 'color: green;');
                     source = tempSource;
-                    break;
+                    startStreaming();
+                    return;
                 }
             }
-            startStreaming();
+            alert("Could not record desktop audio.");
         }
     });
 }
@@ -32,6 +33,7 @@ function startService() {
 function startStreaming() {
     if (source != null) {
         ipcRenderer.on('liquidsoap-started', function(event, arg) {
+            console.log(source);
             navigator.mediaDevices.getUserMedia({
                 audio: {
                     mandatory: {
@@ -54,12 +56,12 @@ function startStreaming() {
                     if (audioTracks.length > 0) {
                         let audioStream = audioTracks[0];
                         const audioCtx = new AudioContext();
-                        const source = audioCtx.createMediaStreamSource(stream);
+                        const streamSource = audioCtx.createMediaStreamSource(stream);
                         
                         let encoder = new Webcast.Encoder.Mp3({
                             channels: 2,
                             samplerate: 44100,
-                            bitrate: 128
+                            bitrate: 256
                         });
                         
                         console.log("Audio context samplerate", audioCtx.sampleRate);
@@ -72,18 +74,18 @@ function startStreaming() {
                         
                         encoder = new Webcast.Encoder.Asynchronous({
                             encoder: encoder,
-                            scripts: ["webcast.js", "libshine.js", "libsamplerate.js"]
+                            scripts: ["https://www.tuneplay.net/import/webcast.js", "https://www.tuneplay.net/import/libshine.js", "https://www.tuneplay.net/import/libsamplerate.js"]
                         });
                         
                         webcast = audioCtx.createWebcastSource(4096, 2);
-                        source.connect(webcast);
+                        streamSource.connect(webcast);
                         webcast.connect(audioCtx.destination);
                         
                         webcast.connectSocket(encoder, "ws://source:hackme@localhost:4001/mount");
                         isStreaming = true;
 
                         startStop.innerHTML = "Stop Livestreaming";
-                        startStop.onclick = "stopStreaming();";
+                        startStop.setAttribute("onclick", "stopStreaming();");
                         startStop.className = "stop";
                     }
                     else {
@@ -109,6 +111,6 @@ function stopStreaming() {
     }
 
     startStop.innerHTML = "Start Livestreaming";
-    startStop.onclick = "startService();";
+    startStop.setAttribute("onclick", "startStreaming();");
     startStop.className = "start";
 }

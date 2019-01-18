@@ -34,7 +34,7 @@ app.on('ready', function() {
 
 function checkForUpdates() {
     progressBar = new ProgressBar({
-        title: 'TunePlay',
+        title: 'TunePlay Streamer',
         text: 'Checking for updates...',
         detail: 'Fetching update logs...',
         indeterminate: true,
@@ -215,6 +215,10 @@ function start() {
                             streamMP = streamMP.toLowerCase();
                         }
                         streamPW = result;
+                        
+                        // streamMP = 'test';
+                        // streamPW = 'tuneplay2018';
+
                         console.log(streamMP);
                         console.log(streamPW);
 
