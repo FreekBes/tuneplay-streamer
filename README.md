@@ -1,6 +1,6 @@
 # TunePlay Streamer
 
-**Currently in development - unstable!**
+**Currently in development - working but unstable!**
 
 [Download for Windows](https://github.com/FreekBes/tuneplay-streamer/raw/master/dist/tuneplay-streamer-latest.exe)
 
