@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell, remote, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, shell, remote, ipcMain, systemPreferences } = require('electron');
 const nodeCmd = require('node-cmd');
 const ProgressBar = require('electron-progressbar');
 const fetchJson = require('fetch-json');
@@ -166,6 +166,8 @@ function start() {
         darkTheme: true,
         vibrancy: "dark",
         titleBarStyle: 'hiddenInset',
+        minWidth: 450,
+        minHeight: 500,
         webPreferences: {
             devTools: false,
             defaultFontFamily: 'sansSerif',
@@ -175,6 +177,20 @@ function start() {
         },
         icon: __dirname + "/buildResources/icon.ico"
     });
+
+    let windowsAccentColor, windowsAccentColorHex;
+    function updateAccentColor() {
+        windowsAccentColor = "#"+systemPreferences.getAccentColor().substring(0, 6);
+        mainWindow.webContents.send('accent-color-changed', windowsAccentColor);
+        console.log("Updating accent color... It is now " + windowsAccentColor);
+    }
+    if (process.platform === "win32") {
+        console.log("Platform is win32, so using accent colors!");
+        systemPreferences.on('accent-color-changed', updateAccentColor);
+    }
+    else {
+        console.log("Not on win32, so not using accent colors! Platform is " + process.platform);
+    }
 
     mainWindow.setMenu(null);
     mainWindow.loadURL('https://www.tuneplay.net/loading.php');
@@ -195,7 +211,6 @@ function start() {
         // update page title, but do not do so on login.php
         if (mainWindow.webContents.getURL().indexOf(".tuneplay.net/login.php") == -1) {
             mainWindow.title = title;
-            mainWindow.webContents.executeJavaScript(`document.getElementById("electron-window-title-text").innerHTML = decodeURIComponent("`+encodeURIComponent(title)+`");`);
         }
         else {
             mainWindow.title = "Sign in to TunePlay";
@@ -216,11 +231,11 @@ function start() {
                         }
                         streamPW = result;
                         
-                        // streamMP = 'test';
-                        // streamPW = 'tuneplay2018';
+                        streamMP = 'test';
+                        streamPW = 'tuneplay2018';
 
-                        console.log(streamMP);
-                        console.log(streamPW);
+                        // console.log(streamMP);
+                        // console.log(streamPW);
 
                         let liqScript = `
                             #!/usr/bin/liquidsoap
@@ -298,20 +313,12 @@ function start() {
         else {
             console.log("Loaded page is not an artist portal main page");
         }
+        updateAccentColor();
     });
 
     mainWindow.on('closed', function(event) {
         if (liqSoapRunning) {
-            console.log("Stopping liquidsoap...");
-            nodeCmd.get('taskkill /IM "liquidsoap.exe" /F', function(err, data, stderr) {
-                if (err) {
-                    console.log("Could not stop liquidsoap!");
-                    console.error(err);
-                }
-                else {
-                    console.log("Liquidsoap has been stopped.");
-                }
-            });
+            stopLiqSoap();
         }
         else {
             console.log("Liquidsoap is not running, no need to stop it.");
@@ -334,11 +341,39 @@ function start() {
         console.log("Quitting TunePlay Streamer...");
         app.quit();
     });
+
+    ipcMain.on('now-streaming', function(event, nowStreaming) {
+        if (process.platform === "win32") {
+            if (nowStreaming === true) {
+                mainWindow.setOverlayIcon('resources/live.png', 'Currently streaming as ' + global.artistData["name"]);
+                mainWindow.setThumbarButtons([{
+                    tooltip: 'Stop Livestreaming',
+                    icon: 'resources/stop.png',
+                    click: function() {
+                        mainWindow.webContents.send('stop-streaming', null);
+                    },
+                    flags: ['enabled']
+                }]);
+            }
+            else {
+                mainWindow.setOverlayIcon(null, "");
+                mainWindow.setThumbarButtons([]);
+            }
+        }
+    });
+}
+
+function stopLiqSoap() {
+    console.log("Stopping liquidsoap...");
+    nodeCmd.run('taskkill /IM "liquidsoap.exe" /F');
+    liqSoapRunning = false;
 }
 
 function startLiqSoap(afterWards) {
+    console.log("startLiqSoap function called");
     if (!liqSoapRunning) {
         console.log("Starting liquidsoap...");
+        /*
         nodeCmd.get('liq\\liquidsoap.exe liq\\script.liq', function(err, data, stderr) {
             console.log("nodeCmd callback fired");
             if (err) {
@@ -347,6 +382,8 @@ function startLiqSoap(afterWards) {
                 app.quit();
             }
         });
+        */
+       nodeCmd.run('liq\\liquidsoap.exe liq\\script.liq');
         liqSoapRunning = true;
         if (typeof afterWards == "function") {
             afterWards();
@@ -368,4 +405,8 @@ ipcMain.on('start-liqsoap', function(event, arg) {
         console.log("Liqsoap started event firing");
         event.sender.send('liquidsoap-started');
     });
+});
+
+ipcMain.on('stop-liqsoap', function(event, arg) {
+    stopLiqSoap();
 });

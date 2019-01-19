@@ -1,9 +1,0 @@
-directories:
-  output: dist
-  buildResources: build
-appId: net.tuneplay.streamer
-productName: TunePlay Streamer
-extraFiles:
-  - filter:
-      - liq
-electronVersion: 4.0.0

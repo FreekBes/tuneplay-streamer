@@ -1,6 +1,6 @@
 {
   "name": "tuneplay-streamer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tool for Artists to livestream sets and mixes directly to TunePlay",
   "homepage": "https://github.com/FreekBes/tuneplay-streamer#readme",
   "main": "main.js",
@@ -8,7 +8,8 @@
     "appId": "net.tuneplay.streamer",
     "productName": "TunePlay Streamer",
     "extraFiles": [
-      "liq"
+      "liq",
+      "resources"
     ]
   },
   "scripts": {

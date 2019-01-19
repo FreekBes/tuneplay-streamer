@@ -9,15 +9,17 @@
         <link rel="shortcut icon" href="build/favicon.ico" type="image/x-icon" />
         <link rel="icon" type="image/ico" href="build/favicon.ico" />
         <meta name="theme-color" content="#FFCB2E" />
-        <script src="webcast.js"></script>
-        <script src="libsamplerate.js"></script>
-        <script src="libshine.js"></script>
+        <script src="https://www.tuneplay.net/import/webcast.js"></script>
+        <script src="https://www.tuneplay.net/import/libsamplerate.js"></script>
+        <script src="https://www.tuneplay.net/import/libshine.js"></script>
+        <style id="windows-theme-styles"></style>
     </head>
     <body>
-        <div id="welcome"></div>
+        <div id="welcome" class="windows-bg-color"></div>
         <div id="control">
-            <button id="start-stop-streaming" class="start" onclick="startService();">Start Livestreaming</button>
+            <button id="start-stop-streaming" class="start windows-bg-color" onclick="startService();">Start Livestreaming</button>
         </div>
+        <canvas id="waveform" width="640" height="128"></canvas>
         <script src="streamer.js"></script>
     </body>
 </html>
