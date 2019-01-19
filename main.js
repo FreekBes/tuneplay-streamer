@@ -231,11 +231,11 @@ function start() {
                         }
                         streamPW = result;
                         
-                        streamMP = 'test';
-                        streamPW = 'tuneplay2018';
+                        // streamMP = 'test';
+                        // streamPW = 'tuneplay2018';
 
-                        // console.log(streamMP);
-                        // console.log(streamPW);
+                        console.log(streamMP);
+                        console.log(streamPW);
 
                         let liqScript = `
                             #!/usr/bin/liquidsoap
