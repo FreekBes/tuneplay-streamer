@@ -1,3 +1,12 @@
+---
+
+# DO NOT USE
+Right now, this application is very unstable on TunePlay's end and may cause some serious problems for your artist profile. Do not use this application, but use [B.U.T.T.](https://danielnoethen.de/) instead.
+
+We might try to resolve these issues in the future, but as TunePlay's livestreaming features aren't used that regularly, we won't be putting that much time into it right now. Sorry for any inconvenience caused.
+
+---
+
 # TunePlay Streamer
 
 [Download for Windows](https://github.com/FreekBes/tuneplay-streamer/raw/master/dist/tuneplay-streamer-latest.exe)
